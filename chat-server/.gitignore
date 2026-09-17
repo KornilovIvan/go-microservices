@@ -3,6 +3,6 @@
 bin/
 vendor/
 *.exe
-grpc_server
-grpc_client
+/grpc_server
+/grpc_client
 *.env

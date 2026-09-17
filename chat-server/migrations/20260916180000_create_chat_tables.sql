@@ -1,25 +1,25 @@
 -- +goose Up
-create table chats (
-    id serial primary key,
-    created_at timestamp not null default now()
+CREATE TABLE chats (
+    id SERIAL PRIMARY KEY,
+    created_at TIMESTAMP NOT NULL DEFAULT NOW()
 );
 
-create table chat_users (
-    id serial primary key,
-    chat_id int not null references chats(id) on delete cascade,
-    username text not null,
-    unique (chat_id, username)
+CREATE TABLE chat_users (
+    id SERIAL PRIMARY KEY,
+    chat_id INT NOT NULL REFERENCES chats(id) ON DELETE CASCADE,
+    username TEXT NOT NULL,
+    UNIQUE (chat_id, username)
 );
 
-create table messages (
-    id serial primary key,
-    chat_id int references chats(id) on delete cascade,
-    from_user text not null,
-    text text not null,
-    sent_at timestamp not null default now()
+CREATE TABLE messages (
+    id SERIAL PRIMARY KEY,
+    chat_id INT REFERENCES chats(id) ON DELETE CASCADE,
+    from_user TEXT NOT NULL,
+    text TEXT NOT NULL,
+    sent_at TIMESTAMP NOT NULL DEFAULT NOW()
 );
 
 -- +goose Down
-drop table messages;
-drop table chat_users;
-drop table chats;
+DROP TABLE messages;
+DROP TABLE chat_users;
+DROP TABLE chats;

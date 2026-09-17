@@ -1,13 +1,13 @@
 -- +goose Up
-create table users (
-    id serial primary key,
-    name text not null,
-    email text not null unique,
-    password text not null,
-    role text not null,
-    created_at timestamp not null default now(),
-    updated_at timestamp
+CREATE TABLE users (
+    id SERIAL PRIMARY KEY,
+    name TEXT NOT NULL,
+    email TEXT NOT NULL UNIQUE,
+    password TEXT NOT NULL,
+    role TEXT NOT NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMP
 );
 
 -- +goose Down
-drop table users;
+DROP TABLE users;
