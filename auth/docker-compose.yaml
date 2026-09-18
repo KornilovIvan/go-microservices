@@ -32,10 +32,8 @@ services:
       context: .
       dockerfile: Dockerfile
     restart: on-failure
-    environment:
-      - "GRPC_HOST=0.0.0.0"
-      - "GRPC_PORT=${GRPC_PORT}"
-      - "PG_DSN=host=pg port=5432 dbname=${PG_DATABASE_NAME} user=${PG_USER} password=${PG_PASSWORD} sslmode=disable"
+    env_file:
+      - prod.env
     ports:
       - "${GRPC_PORT}:${GRPC_PORT}"
     depends_on:

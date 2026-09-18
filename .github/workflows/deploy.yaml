@@ -80,8 +80,5 @@ jobs:
               --name auth-app \
               --network app-net \
               -p 50051:50051 \
-              -e GRPC_HOST=0.0.0.0 \
-              -e GRPC_PORT=50051 \
-              -e "PG_DSN=host=pg port=5432 dbname=auth user=auth-user password=auth-password sslmode=disable" \
               --restart unless-stopped \
               ghcr.io/kornilovivan/auth:latest

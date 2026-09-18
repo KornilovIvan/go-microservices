@@ -6,3 +6,5 @@ vendor/
 /grpc_server
 /grpc_client
 *.env
+!local.env
+!prod.env

@@ -13,6 +13,6 @@ FROM alpine:3.20
 WORKDIR /root
 
 COPY --from=builder /build/bin/grpc_server .
-COPY .env.example .env
+COPY prod.env .
 
-CMD ["./grpc_server"]
+CMD ["./grpc_server", "--config-path", "prod.env"]

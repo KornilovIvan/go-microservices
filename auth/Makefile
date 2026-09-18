@@ -1,4 +1,4 @@
-include .env
+include local.env
 
 LOCAL_BIN := $(CURDIR)/bin
 LOCAL_MIGRATION_DIR := $(MIGRATION_DIR)
@@ -27,10 +27,10 @@ generate-auth-api:
 	api/auth_v1/auth.proto
 
 local-up:
-	docker compose up -d --build
+	docker compose --env-file local.env up -d --build
 
 local-down:
-	docker compose down
+	docker compose --env-file local.env down
 
 local-migration-status:
 	"$(LOCAL_BIN)/goose" -dir "$(LOCAL_MIGRATION_DIR)" postgres "$(LOCAL_MIGRATION_DSN)" status -v
