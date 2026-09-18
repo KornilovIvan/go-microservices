@@ -1,7 +1,16 @@
 package config
 
-import "github.com/joho/godotenv"
+import (
+	"errors"
+	"os"
+
+	"github.com/joho/godotenv"
+)
 
 func Load(path string) error {
-	return godotenv.Load(path)
+	err := godotenv.Load(path)
+	if err != nil && (os.IsNotExist(err) || errors.Is(err, os.ErrNotExist)) {
+		return nil
+	}
+	return err
 }
