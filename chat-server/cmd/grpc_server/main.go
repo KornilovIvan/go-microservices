@@ -144,28 +144,18 @@ func main() {
 	flag.Parse()
 	ctx := context.Background()
 
-	err := config.Load(configPath)
+	cfg, err := config.Parse(configPath)
 	if err != nil {
-		log.Fatalf("failed to load config: %v", err)
+		log.Fatalf("failed to parse config: %v", err)
 	}
 
-	grpcConfig, err := config.NewGRPCConfig()
-	if err != nil {
-		log.Fatalf("failed to get grpc config: %v", err)
-	}
-
-	pgConfig, err := config.NewPGConfig()
-	if err != nil {
-		log.Fatalf("failed to get pg config: %v", err)
-	}
-
-	pool, err := pgxpool.Connect(ctx, pgConfig.DSN())
+	pool, err := pgxpool.Connect(ctx, cfg.PG.DSN())
 	if err != nil {
 		log.Fatalf("failed to connect to database: %v", err)
 	}
 	defer pool.Close()
 
-	lis, err := net.Listen("tcp", grpcConfig.Address())
+	lis, err := net.Listen("tcp", cfg.GRPC.Address())
 	if err != nil {
 		log.Fatalf("failed to listen: %v", err)
 	}

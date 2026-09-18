@@ -24,17 +24,12 @@ func init() {
 func main() {
 	flag.Parse()
 
-	err := config.Load(configPath)
+	cfg, err := config.Parse(configPath)
 	if err != nil {
-		log.Fatalf("failed to load config: %v", err)
+		log.Fatalf("failed to parse config: %v", err)
 	}
 
-	grpcConfig, err := config.NewGRPCConfig()
-	if err != nil {
-		log.Fatalf("failed to get grpc config: %v", err)
-	}
-
-	conn, err := grpc.Dial(grpcConfig.Address(), grpc.WithTransportCredentials(insecure.NewCredentials()))
+	conn, err := grpc.Dial(cfg.GRPC.Address(), grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		log.Fatalf("failed to connect to server: %v", err)
 	}
