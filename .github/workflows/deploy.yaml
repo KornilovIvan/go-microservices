@@ -5,12 +5,17 @@ on:
     branches:
       - main
     paths:
-      - 'auth/**'
-      - 'chat-server/**'
-      - '.github/workflows/deploy.yaml'
+      - "auth/**"
+      - "chat-server/**"
+      - ".github/workflows/deploy.yaml"
+
+permissions:
+  contents: read
+  packages: write
 
 env:
   REGISTRY: ghcr.io
+  IMAGE_OWNER: kornilovivan
 
 jobs:
   build-and-push:
@@ -39,7 +44,7 @@ jobs:
           context: ./auth
           file: ./auth/Dockerfile
           push: true
-          tags: ${{ env.REGISTRY }}/kornilovivan/auth:latest
+          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_OWNER }}/auth:latest
 
       - name: Build and Push Chat-Server Image
         uses: docker/build-push-action@v5
@@ -47,11 +52,14 @@ jobs:
           context: ./chat-server
           file: ./chat-server/Dockerfile
           push: true
-          tags: ${{ env.REGISTRY }}/kornilovivan/chat-server:latest
+          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_OWNER }}/chat-server:latest
 
   deploy-auth:
     runs-on: ubuntu-latest
     needs: build-and-push
+    permissions:
+      contents: read
+      packages: read
 
     steps:
       - name: Deploy Auth to Remote Server via SSH
@@ -61,13 +69,10 @@ jobs:
           username: ${{ secrets.SSH_USERNAME }}
           key: ${{ secrets.SSH_KEY }}
           script: |
-            # 1. Логинимся в ghcr.io
             echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
 
-            # 2. Скачиваем свежий образ auth
             docker pull ghcr.io/kornilovivan/auth:latest
 
-            # 3. Перезапускаем контейнер auth-app
             docker stop auth-app || true
             docker rm auth-app || true
 
