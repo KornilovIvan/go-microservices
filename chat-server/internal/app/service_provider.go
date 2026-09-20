@@ -4,11 +4,11 @@ import (
 	"context"
 	"log"
 
-	"github.com/jackc/pgx/v4/pgxpool"
-
 	chatAPI "github.com/ivankornilov/chat-server/internal/api/chat"
+	"github.com/ivankornilov/chat-server/internal/client/db"
+	"github.com/ivankornilov/chat-server/internal/client/db/pg"
+	"github.com/ivankornilov/chat-server/internal/client/db/transaction"
 	"github.com/ivankornilov/chat-server/internal/config"
-	"github.com/ivankornilov/chat-server/internal/dbtx"
 	"github.com/ivankornilov/chat-server/internal/repository"
 	chatRepository "github.com/ivankornilov/chat-server/internal/repository/chat"
 	"github.com/ivankornilov/chat-server/internal/service"
@@ -18,8 +18,8 @@ import (
 type serviceProvider struct {
 	cfg *config.Config
 
-	pool           *pgxpool.Pool
-	txManager      dbtx.Manager
+	dbClient       db.Client
+	txManager      db.TxManager
 	chatRepository repository.ChatRepository
 	chatService    service.ChatService
 	chatImpl       *chatAPI.Implementation
@@ -33,22 +33,27 @@ func (s *serviceProvider) Config() *config.Config {
 	return s.cfg
 }
 
-func (s *serviceProvider) Pool(ctx context.Context) *pgxpool.Pool {
-	if s.pool == nil {
-		pool, err := pgxpool.Connect(ctx, s.Config().PG.DSN())
+func (s *serviceProvider) DBClient(ctx context.Context) db.Client {
+	if s.dbClient == nil {
+		cl, err := pg.New(ctx, s.Config().PG.DSN())
 		if err != nil {
-			log.Fatalf("failed to connect to database: %v", err)
+			log.Fatalf("failed to create db client: %v", err)
 		}
 
-		s.pool = pool
+		err = cl.DB().Ping(ctx)
+		if err != nil {
+			log.Fatalf("ping error: %s", err.Error())
+		}
+
+		s.dbClient = cl
 	}
 
-	return s.pool
+	return s.dbClient
 }
 
-func (s *serviceProvider) TxManager(ctx context.Context) dbtx.Manager {
+func (s *serviceProvider) TxManager(ctx context.Context) db.TxManager {
 	if s.txManager == nil {
-		s.txManager = dbtx.NewManager(s.Pool(ctx))
+		s.txManager = transaction.NewTransactionManager(s.DBClient(ctx).DB())
 	}
 
 	return s.txManager
@@ -56,7 +61,7 @@ func (s *serviceProvider) TxManager(ctx context.Context) dbtx.Manager {
 
 func (s *serviceProvider) ChatRepository(ctx context.Context) repository.ChatRepository {
 	if s.chatRepository == nil {
-		s.chatRepository = chatRepository.NewRepository(s.Pool(ctx))
+		s.chatRepository = chatRepository.NewRepository(s.DBClient(ctx))
 	}
 
 	return s.chatRepository
@@ -79,7 +84,7 @@ func (s *serviceProvider) ChatImpl(ctx context.Context) *chatAPI.Implementation 
 }
 
 func (s *serviceProvider) Close() {
-	if s.pool != nil {
-		s.pool.Close()
+	if s.dbClient != nil {
+		_ = s.dbClient.Close()
 	}
 }

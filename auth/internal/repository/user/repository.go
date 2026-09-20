@@ -8,8 +8,8 @@ import (
 	sq "github.com/Masterminds/squirrel"
 	"github.com/jackc/pgconn"
 	"github.com/jackc/pgx/v4"
-	"github.com/jackc/pgx/v4/pgxpool"
 
+	"github.com/ivankornilov/auth/internal/client/db"
 	"github.com/ivankornilov/auth/internal/model"
 	"github.com/ivankornilov/auth/internal/repository"
 )
@@ -27,11 +27,11 @@ const (
 )
 
 type repo struct {
-	pool *pgxpool.Pool
+	db db.Client
 }
 
-func NewRepository(pool *pgxpool.Pool) repository.UserRepository {
-	return &repo{pool: pool}
+func NewRepository(db db.Client) repository.UserRepository {
+	return &repo{db: db}
 }
 
 func (r *repo) Create(ctx context.Context, info *model.UserInfo) (int64, error) {
@@ -45,8 +45,13 @@ func (r *repo) Create(ctx context.Context, info *model.UserInfo) (int64, error) 
 		return 0, err
 	}
 
+	q := db.Query{
+		Name:     "user_repository.Create",
+		QueryRaw: query,
+	}
+
 	var id int64
-	err = r.pool.QueryRow(ctx, query, args...).Scan(&id)
+	err = r.db.DB().QueryRowContext(ctx, q, args...).Scan(&id)
 	if err != nil {
 		var pgErr *pgconn.PgError
 		if errors.As(err, &pgErr) && pgErr.Code == "23505" {
@@ -69,8 +74,13 @@ func (r *repo) Get(ctx context.Context, id int64) (*model.User, error) {
 		return nil, err
 	}
 
+	q := db.Query{
+		Name:     "user_repository.Get",
+		QueryRaw: query,
+	}
+
 	user := &model.User{}
-	err = r.pool.QueryRow(ctx, query, args...).Scan(
+	err = r.db.DB().QueryRowContext(ctx, q, args...).Scan(
 		&user.ID,
 		&user.Info.Name,
 		&user.Info.Email,
@@ -106,7 +116,12 @@ func (r *repo) Update(ctx context.Context, user *model.UpdateUser) error {
 		return err
 	}
 
-	tag, err := r.pool.Exec(ctx, query, args...)
+	q := db.Query{
+		Name:     "user_repository.Update",
+		QueryRaw: query,
+	}
+
+	tag, err := r.db.DB().ExecContext(ctx, q, args...)
 	if err != nil {
 		var pgErr *pgconn.PgError
 		if errors.As(err, &pgErr) && pgErr.Code == "23505" {
@@ -130,7 +145,12 @@ func (r *repo) Delete(ctx context.Context, id int64) error {
 		return err
 	}
 
-	tag, err := r.pool.Exec(ctx, query, args...)
+	q := db.Query{
+		Name:     "user_repository.Delete",
+		QueryRaw: query,
+	}
+
+	tag, err := r.db.DB().ExecContext(ctx, q, args...)
 	if err != nil {
 		return err
 	}

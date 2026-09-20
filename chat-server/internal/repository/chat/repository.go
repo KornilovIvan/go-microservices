@@ -7,10 +7,8 @@ import (
 
 	sq "github.com/Masterminds/squirrel"
 	"github.com/jackc/pgconn"
-	"github.com/jackc/pgx/v4"
-	"github.com/jackc/pgx/v4/pgxpool"
 
-	"github.com/ivankornilov/chat-server/internal/dbtx"
+	"github.com/ivankornilov/chat-server/internal/client/db"
 	"github.com/ivankornilov/chat-server/internal/model"
 	"github.com/ivankornilov/chat-server/internal/repository"
 )
@@ -29,24 +27,12 @@ const (
 	sentAtColumn    = "sent_at"
 )
 
-type querier interface {
-	QueryRow(ctx context.Context, sql string, args ...interface{}) pgx.Row
-	Exec(ctx context.Context, sql string, arguments ...interface{}) (pgconn.CommandTag, error)
-}
-
 type repo struct {
-	pool *pgxpool.Pool
+	db db.Client
 }
 
-func NewRepository(pool *pgxpool.Pool) repository.ChatRepository {
-	return &repo{pool: pool}
-}
-
-func (r *repo) querier(ctx context.Context) querier {
-	if tx, ok := dbtx.Extract(ctx); ok {
-		return tx
-	}
-	return r.pool
+func NewRepository(db db.Client) repository.ChatRepository {
+	return &repo{db: db}
 }
 
 func (r *repo) Create(ctx context.Context) (int64, error) {
@@ -60,8 +46,13 @@ func (r *repo) Create(ctx context.Context) (int64, error) {
 		return 0, err
 	}
 
+	q := db.Query{
+		Name:     "chat_repository.Create",
+		QueryRaw: query,
+	}
+
 	var chatID int64
-	err = r.querier(ctx).QueryRow(ctx, query, args...).Scan(&chatID)
+	err = r.db.DB().QueryRowContext(ctx, q, args...).Scan(&chatID)
 	if err != nil {
 		return 0, err
 	}
@@ -79,7 +70,12 @@ func (r *repo) AddUser(ctx context.Context, chatID int64, username string) error
 		return err
 	}
 
-	_, err = r.querier(ctx).Exec(ctx, query, args...)
+	q := db.Query{
+		Name:     "chat_repository.AddUser",
+		QueryRaw: query,
+	}
+
+	_, err = r.db.DB().ExecContext(ctx, q, args...)
 	return err
 }
 
@@ -92,7 +88,12 @@ func (r *repo) Delete(ctx context.Context, id int64) error {
 		return err
 	}
 
-	tag, err := r.querier(ctx).Exec(ctx, query, args...)
+	q := db.Query{
+		Name:     "chat_repository.Delete",
+		QueryRaw: query,
+	}
+
+	tag, err := r.db.DB().ExecContext(ctx, q, args...)
 	if err != nil {
 		return err
 	}
@@ -113,7 +114,12 @@ func (r *repo) SendMessage(ctx context.Context, message *model.Message) error {
 		return err
 	}
 
-	_, err = r.querier(ctx).Exec(ctx, query, args...)
+	q := db.Query{
+		Name:     "chat_repository.SendMessage",
+		QueryRaw: query,
+	}
+
+	_, err = r.db.DB().ExecContext(ctx, q, args...)
 	if err != nil {
 		var pgErr *pgconn.PgError
 		if errors.As(err, &pgErr) && pgErr.Code == "23503" {
