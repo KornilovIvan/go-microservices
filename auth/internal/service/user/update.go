@@ -11,5 +11,15 @@ func (s *serv) Update(ctx context.Context, user *model.UpdateUser) error {
 		return model.ErrNameOrEmailRequired
 	}
 
-	return s.userRepository.Update(ctx, user)
+	return s.txManager.ReadCommitted(ctx, func(ctx context.Context) error {
+		err := s.userRepository.Update(ctx, user)
+		if err != nil {
+			return err
+		}
+
+		return s.logRepository.Create(ctx, &model.UserLog{
+			UserID: user.ID,
+			Action: model.LogActionUpdate,
+		})
+	})
 }

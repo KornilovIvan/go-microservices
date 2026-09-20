@@ -7,8 +7,10 @@ import (
 	userAPI "github.com/ivankornilov/auth/internal/api/user"
 	"github.com/ivankornilov/auth/internal/client/db"
 	"github.com/ivankornilov/auth/internal/client/db/pg"
+	"github.com/ivankornilov/auth/internal/client/db/transaction"
 	"github.com/ivankornilov/auth/internal/config"
 	"github.com/ivankornilov/auth/internal/repository"
+	logRepository "github.com/ivankornilov/auth/internal/repository/log"
 	userRepository "github.com/ivankornilov/auth/internal/repository/user"
 	"github.com/ivankornilov/auth/internal/service"
 	userService "github.com/ivankornilov/auth/internal/service/user"
@@ -18,7 +20,9 @@ type serviceProvider struct {
 	cfg *config.Config
 
 	dbClient       db.Client
+	txManager      db.TxManager
 	userRepository repository.UserRepository
+	logRepository  repository.LogRepository
 	userService    service.UserService
 	userImpl       *userAPI.Implementation
 }
@@ -49,6 +53,14 @@ func (s *serviceProvider) DBClient(ctx context.Context) db.Client {
 	return s.dbClient
 }
 
+func (s *serviceProvider) TxManager(ctx context.Context) db.TxManager {
+	if s.txManager == nil {
+		s.txManager = transaction.NewTransactionManager(s.DBClient(ctx).DB())
+	}
+
+	return s.txManager
+}
+
 func (s *serviceProvider) UserRepository(ctx context.Context) repository.UserRepository {
 	if s.userRepository == nil {
 		s.userRepository = userRepository.NewRepository(s.DBClient(ctx))
@@ -57,9 +69,21 @@ func (s *serviceProvider) UserRepository(ctx context.Context) repository.UserRep
 	return s.userRepository
 }
 
+func (s *serviceProvider) LogRepository(ctx context.Context) repository.LogRepository {
+	if s.logRepository == nil {
+		s.logRepository = logRepository.NewRepository(s.DBClient(ctx))
+	}
+
+	return s.logRepository
+}
+
 func (s *serviceProvider) UserService(ctx context.Context) service.UserService {
 	if s.userService == nil {
-		s.userService = userService.NewService(s.UserRepository(ctx))
+		s.userService = userService.NewService(
+			s.UserRepository(ctx),
+			s.LogRepository(ctx),
+			s.TxManager(ctx),
+		)
 	}
 
 	return s.userService

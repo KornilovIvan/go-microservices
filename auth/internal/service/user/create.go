@@ -14,5 +14,22 @@ func (s *serv) Create(ctx context.Context, info *model.UserInfo) (int64, error) 
 		return 0, model.ErrPasswordMismatch
 	}
 
-	return s.userRepository.Create(ctx, info)
+	var id int64
+	err := s.txManager.ReadCommitted(ctx, func(ctx context.Context) error {
+		var err error
+		id, err = s.userRepository.Create(ctx, info)
+		if err != nil {
+			return err
+		}
+
+		return s.logRepository.Create(ctx, &model.UserLog{
+			UserID: id,
+			Action: model.LogActionCreate,
+		})
+	})
+	if err != nil {
+		return 0, err
+	}
+
+	return id, nil
 }
