@@ -1,5 +1,7 @@
 package service
 
+//go:generate minimock -i github.com/ivankornilov/chat-server/internal/service.ChatService -o ./mocks -s _minimock.go
+
 import (
 	"context"
 

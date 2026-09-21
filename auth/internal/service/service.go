@@ -1,5 +1,7 @@
 package service
 
+//go:generate minimock -i github.com/ivankornilov/auth/internal/service.UserService -o ./mocks -s _minimock.go
+
 import (
 	"context"
 
