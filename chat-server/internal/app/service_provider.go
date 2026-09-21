@@ -4,10 +4,10 @@ import (
 	"context"
 	"log"
 
+	"github.com/KornilovIvan/platform_common/pkg/db"
+	"github.com/KornilovIvan/platform_common/pkg/db/pg"
+	"github.com/KornilovIvan/platform_common/pkg/db/transaction"
 	chatAPI "github.com/ivankornilov/chat-server/internal/api/chat"
-	"github.com/ivankornilov/chat-server/internal/client/db"
-	"github.com/ivankornilov/chat-server/internal/client/db/pg"
-	"github.com/ivankornilov/chat-server/internal/client/db/transaction"
 	"github.com/ivankornilov/chat-server/internal/config"
 	"github.com/ivankornilov/chat-server/internal/repository"
 	chatRepository "github.com/ivankornilov/chat-server/internal/repository/chat"

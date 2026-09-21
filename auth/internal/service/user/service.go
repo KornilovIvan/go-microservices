@@ -1,7 +1,7 @@
 package user
 
 import (
-	"github.com/ivankornilov/auth/internal/client/db"
+	"github.com/KornilovIvan/platform_common/pkg/db"
 	"github.com/ivankornilov/auth/internal/repository"
 	"github.com/ivankornilov/auth/internal/service"
 )

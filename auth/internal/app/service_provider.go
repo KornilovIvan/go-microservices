@@ -4,10 +4,10 @@ import (
 	"context"
 	"log"
 
+	"github.com/KornilovIvan/platform_common/pkg/db"
+	"github.com/KornilovIvan/platform_common/pkg/db/pg"
+	"github.com/KornilovIvan/platform_common/pkg/db/transaction"
 	userAPI "github.com/ivankornilov/auth/internal/api/user"
-	"github.com/ivankornilov/auth/internal/client/db"
-	"github.com/ivankornilov/auth/internal/client/db/pg"
-	"github.com/ivankornilov/auth/internal/client/db/transaction"
 	"github.com/ivankornilov/auth/internal/config"
 	"github.com/ivankornilov/auth/internal/repository"
 	logRepository "github.com/ivankornilov/auth/internal/repository/log"

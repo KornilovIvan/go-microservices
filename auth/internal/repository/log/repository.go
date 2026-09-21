@@ -5,7 +5,7 @@ import (
 
 	sq "github.com/Masterminds/squirrel"
 
-	"github.com/ivankornilov/auth/internal/client/db"
+	"github.com/KornilovIvan/platform_common/pkg/db"
 	"github.com/ivankornilov/auth/internal/model"
 	"github.com/ivankornilov/auth/internal/repository"
 )

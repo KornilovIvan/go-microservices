@@ -3,9 +3,9 @@ module github.com/ivankornilov/auth
 go 1.26.6
 
 require (
+	github.com/KornilovIvan/platform_common v1.0.0
 	github.com/Masterminds/squirrel v1.5.4
 	github.com/fatih/color v1.19.0
-	github.com/georgysavva/scany v1.2.1
 	github.com/gojuno/minimock/v3 v3.4.7
 	github.com/jackc/pgconn v1.14.3
 	github.com/jackc/pgx/v4 v4.18.3
@@ -17,6 +17,7 @@ require (
 
 require (
 	github.com/davecgh/go-spew v1.1.1 // indirect
+	github.com/georgysavva/scany v1.2.1 // indirect
 	github.com/jackc/chunkreader/v2 v2.0.1 // indirect
 	github.com/jackc/pgio v1.0.0 // indirect
 	github.com/jackc/pgpassfile v1.0.0 // indirect

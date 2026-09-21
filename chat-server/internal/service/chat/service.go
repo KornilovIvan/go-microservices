@@ -1,7 +1,7 @@
 package chat
 
 import (
-	"github.com/ivankornilov/chat-server/internal/client/db"
+	"github.com/KornilovIvan/platform_common/pkg/db"
 	"github.com/ivankornilov/chat-server/internal/repository"
 	"github.com/ivankornilov/chat-server/internal/service"
 )

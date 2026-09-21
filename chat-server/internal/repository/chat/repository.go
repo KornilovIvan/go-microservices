@@ -8,7 +8,7 @@ import (
 	sq "github.com/Masterminds/squirrel"
 	"github.com/jackc/pgconn"
 
-	"github.com/ivankornilov/chat-server/internal/client/db"
+	"github.com/KornilovIvan/platform_common/pkg/db"
 	"github.com/ivankornilov/chat-server/internal/model"
 	"github.com/ivankornilov/chat-server/internal/repository"
 )
