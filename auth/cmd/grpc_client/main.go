@@ -50,13 +50,13 @@ func main() {
 	if err != nil {
 		log.Fatalf("failed to create user: %v", err)
 	}
-	log.Printf(color.GreenString("Create response: %+v", createRes))
+	log.Println(color.GreenString("Create response: %+v", createRes))
 
 	getRes, err := c.Get(ctx, &desc.GetRequest{Id: createRes.GetId()})
 	if err != nil {
 		log.Fatalf("failed to get user: %v", err)
 	}
-	log.Printf(color.GreenString("Get response: %+v", getRes))
+	log.Println(color.GreenString("Get response: %+v", getRes))
 
 	_, err = c.Update(ctx, &desc.UpdateRequest{
 		Id:    createRes.GetId(),
@@ -66,17 +66,17 @@ func main() {
 	if err != nil {
 		log.Fatalf("failed to update user: %v", err)
 	}
-	log.Printf(color.GreenString("Update: ok"))
+	log.Println(color.GreenString("Update: ok"))
 
 	getRes, err = c.Get(ctx, &desc.GetRequest{Id: createRes.GetId()})
 	if err != nil {
 		log.Fatalf("failed to get updated user: %v", err)
 	}
-	log.Printf(color.GreenString("Get after update: %+v", getRes))
+	log.Println(color.GreenString("Get after update: %+v", getRes))
 
 	_, err = c.Delete(ctx, &desc.DeleteRequest{Id: createRes.GetId()})
 	if err != nil {
 		log.Fatalf("failed to delete user: %v", err)
 	}
-	log.Printf(color.GreenString("Delete: ok"))
+	log.Println(color.GreenString("Delete: ok"))
 }

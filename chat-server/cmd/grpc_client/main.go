@@ -46,7 +46,7 @@ func main() {
 	if err != nil {
 		log.Fatalf("failed to create chat: %v", err)
 	}
-	log.Printf(color.GreenString("Create response: %+v", createRes))
+	log.Println(color.GreenString("Create response: %+v", createRes))
 
 	_, err = c.SendMessage(ctx, &desc.SendMessageRequest{
 		ChatId:    createRes.GetId(),
@@ -57,11 +57,11 @@ func main() {
 	if err != nil {
 		log.Fatalf("failed to send message: %v", err)
 	}
-	log.Printf(color.GreenString("SendMessage: ok"))
+	log.Println(color.GreenString("SendMessage: ok"))
 
 	_, err = c.Delete(ctx, &desc.DeleteRequest{Id: createRes.GetId()})
 	if err != nil {
 		log.Fatalf("failed to delete chat: %v", err)
 	}
-	log.Printf(color.GreenString("Delete: ok"))
+	log.Println(color.GreenString("Delete: ok"))
 }
