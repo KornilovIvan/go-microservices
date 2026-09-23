@@ -5,6 +5,7 @@ import "github.com/joho/godotenv"
 type Config struct {
 	GRPC GRPCConfig
 	PG   PGConfig
+	Auth AuthConfig
 }
 
 func Load(path string) error {
@@ -32,8 +33,14 @@ func Parse(path string) (*Config, error) {
 		return nil, err
 	}
 
+	authCfg, err := NewAuthConfig()
+	if err != nil {
+		return nil, err
+	}
+
 	return &Config{
 		GRPC: grpcCfg,
 		PG:   pgCfg,
+		Auth: authCfg,
 	}, nil
 }

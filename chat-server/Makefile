@@ -16,6 +16,7 @@ get-deps:
 
 generate:
 	make generate-chat-api
+	make generate-access-api
 
 generate-chat-api:
 	mkdir -p pkg/chat_v1
@@ -25,6 +26,15 @@ generate-chat-api:
 	--go-grpc_out=pkg/chat_v1 --go-grpc_opt=paths=source_relative \
 	--plugin=protoc-gen-go-grpc="$(LOCAL_BIN)/protoc-gen-go-grpc" \
 	api/chat_v1/chat.proto
+
+generate-access-api:
+	mkdir -p pkg/access_v1
+	protoc --proto_path api/access_v1 \
+	--go_out=pkg/access_v1 --go_opt=paths=source_relative \
+	--plugin=protoc-gen-go="$(LOCAL_BIN)/protoc-gen-go" \
+	--go-grpc_out=pkg/access_v1 --go-grpc_opt=paths=source_relative \
+	--plugin=protoc-gen-go-grpc="$(LOCAL_BIN)/protoc-gen-go-grpc" \
+	api/access_v1/access.proto
 
 local-up:
 	docker compose --env-file local.env up -d --build

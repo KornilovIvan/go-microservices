@@ -7,22 +7,30 @@ import (
 	"github.com/KornilovIvan/platform_common/pkg/db"
 	"github.com/KornilovIvan/platform_common/pkg/db/pg"
 	"github.com/KornilovIvan/platform_common/pkg/db/transaction"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
+
 	chatAPI "github.com/ivankornilov/chat-server/internal/api/chat"
 	"github.com/ivankornilov/chat-server/internal/config"
+	"github.com/ivankornilov/chat-server/internal/interceptor"
 	"github.com/ivankornilov/chat-server/internal/repository"
 	chatRepository "github.com/ivankornilov/chat-server/internal/repository/chat"
 	"github.com/ivankornilov/chat-server/internal/service"
 	chatService "github.com/ivankornilov/chat-server/internal/service/chat"
+	accessDesc "github.com/ivankornilov/chat-server/pkg/access_v1"
 )
 
 type serviceProvider struct {
 	cfg *config.Config
 
-	dbClient       db.Client
-	txManager      db.TxManager
-	chatRepository repository.ChatRepository
-	chatService    service.ChatService
-	chatImpl       *chatAPI.Implementation
+	dbClient          db.Client
+	txManager         db.TxManager
+	chatRepository    repository.ChatRepository
+	chatService       service.ChatService
+	chatImpl          *chatAPI.Implementation
+	accessConn        *grpc.ClientConn
+	accessClient      accessDesc.AccessV1Client
+	accessInterceptor *interceptor.AccessInterceptor
 }
 
 func newServiceProvider() *serviceProvider {
@@ -75,6 +83,31 @@ func (s *serviceProvider) ChatService(ctx context.Context) service.ChatService {
 	return s.chatService
 }
 
+func (s *serviceProvider) AccessClient(_ context.Context) accessDesc.AccessV1Client {
+	if s.accessClient == nil {
+		conn, err := grpc.NewClient(
+			s.Config().Auth.Address(),
+			grpc.WithTransportCredentials(insecure.NewCredentials()),
+		)
+		if err != nil {
+			log.Fatalf("failed to connect to auth: %v", err)
+		}
+
+		s.accessConn = conn
+		s.accessClient = accessDesc.NewAccessV1Client(conn)
+	}
+
+	return s.accessClient
+}
+
+func (s *serviceProvider) AccessInterceptor(ctx context.Context) *interceptor.AccessInterceptor {
+	if s.accessInterceptor == nil {
+		s.accessInterceptor = interceptor.NewAccessInterceptor(s.AccessClient(ctx))
+	}
+
+	return s.accessInterceptor
+}
+
 func (s *serviceProvider) ChatImpl(ctx context.Context) *chatAPI.Implementation {
 	if s.chatImpl == nil {
 		s.chatImpl = chatAPI.NewImplementation(s.ChatService(ctx))
@@ -84,6 +117,9 @@ func (s *serviceProvider) ChatImpl(ctx context.Context) *chatAPI.Implementation 
 }
 
 func (s *serviceProvider) Close() {
+	if s.accessConn != nil {
+		_ = s.accessConn.Close()
+	}
 	if s.dbClient != nil {
 		_ = s.dbClient.Close()
 	}
