@@ -37,6 +37,7 @@ services:
     ports:
       - "${GRPC_PORT}:${GRPC_PORT}"
       - "${HTTP_PORT}:${HTTP_PORT}"
+      - "${SWAGGER_PORT}:${SWAGGER_PORT}"
     depends_on:
       pg:
         condition: service_healthy

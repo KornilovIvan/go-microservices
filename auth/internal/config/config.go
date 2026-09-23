@@ -3,9 +3,10 @@ package config
 import "github.com/joho/godotenv"
 
 type Config struct {
-	GRPC GRPCConfig
-	HTTP HTTPConfig
-	PG   PGConfig
+	GRPC    GRPCConfig
+	HTTP    HTTPConfig
+	PG      PGConfig
+	Swagger SwaggerConfig
 }
 
 func Load(path string) error {
@@ -38,9 +39,15 @@ func Parse(path string) (*Config, error) {
 		return nil, err
 	}
 
+	swaggerCfg, err := NewSwaggerConfig()
+	if err != nil {
+		return nil, err
+	}
+
 	return &Config{
-		GRPC: grpcCfg,
-		HTTP: httpCfg,
-		PG:   pgCfg,
+		GRPC:    grpcCfg,
+		HTTP:    httpCfg,
+		PG:      pgCfg,
+		Swagger: swaggerCfg,
 	}, nil
 }

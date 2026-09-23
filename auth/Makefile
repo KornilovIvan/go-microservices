@@ -11,6 +11,8 @@ install-deps:
 	GOBIN="$(LOCAL_BIN)" go install github.com/pressly/goose/v3/cmd/goose@v3.14.0
 	GOBIN="$(LOCAL_BIN)" go install github.com/grpc-ecosystem/grpc-gateway/v2/protoc-gen-grpc-gateway@v2.27.3
 	GOBIN="$(LOCAL_BIN)" go install github.com/envoyproxy/protoc-gen-validate@v0.10.1
+	GOBIN="$(LOCAL_BIN)" go install github.com/grpc-ecosystem/grpc-gateway/v2/protoc-gen-openapiv2@v2.27.3
+	GOBIN="$(LOCAL_BIN)" go install github.com/rakyll/statik@v0.1.7
 
 get-deps:
 	go get -u google.golang.org/protobuf/cmd/protoc-gen-go
@@ -18,10 +20,12 @@ get-deps:
 
 generate:
 	make vendor-proto
+	mkdir -p pkg/swagger
 	make generate-auth-api
+	"$(LOCAL_BIN)/statik" -src=pkg/swagger/ -include='*.css,*.html,*.js,*.json,*.png'
 
 generate-auth-api:
-	mkdir -p pkg/auth_v1
+	mkdir -p pkg/auth_v1 pkg/swagger
 	protoc --proto_path api/auth_v1 --proto_path vendor.protogen \
 	--go_out=pkg/auth_v1 --go_opt=paths=source_relative \
 	--plugin=protoc-gen-go="$(LOCAL_BIN)/protoc-gen-go" \
@@ -31,6 +35,8 @@ generate-auth-api:
 	--plugin=protoc-gen-grpc-gateway="$(LOCAL_BIN)/protoc-gen-grpc-gateway" \
 	--validate_out=lang=go:pkg/auth_v1 --validate_opt=paths=source_relative \
 	--plugin=protoc-gen-validate="$(LOCAL_BIN)/protoc-gen-validate" \
+	--openapiv2_out=allow_merge=true,merge_file_name=api:pkg/swagger \
+	--plugin=protoc-gen-openapiv2="$(LOCAL_BIN)/protoc-gen-openapiv2" \
 	api/auth_v1/auth.proto
 
 vendor-proto:
@@ -45,6 +51,12 @@ vendor-proto:
 		mkdir -p vendor.protogen/validate && \
 		mv vendor.protogen/protoc-gen-validate/validate/*.proto vendor.protogen/validate && \
 		rm -rf vendor.protogen/protoc-gen-validate ; \
+	fi
+	@if [ ! -d vendor.protogen/protoc-gen-openapiv2 ]; then \
+		git clone --depth 1 --branch v2.27.3 https://github.com/grpc-ecosystem/grpc-gateway vendor.protogen/openapiv2 && \
+		mkdir -p vendor.protogen/protoc-gen-openapiv2/options && \
+		mv vendor.protogen/openapiv2/protoc-gen-openapiv2/options/*.proto vendor.protogen/protoc-gen-openapiv2/options && \
+		rm -rf vendor.protogen/openapiv2 ; \
 	fi
 
 local-up:
