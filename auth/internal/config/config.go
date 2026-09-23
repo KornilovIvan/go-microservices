@@ -4,6 +4,7 @@ import "github.com/joho/godotenv"
 
 type Config struct {
 	GRPC GRPCConfig
+	HTTP HTTPConfig
 	PG   PGConfig
 }
 
@@ -27,6 +28,11 @@ func Parse(path string) (*Config, error) {
 		return nil, err
 	}
 
+	httpCfg, err := NewHTTPConfig()
+	if err != nil {
+		return nil, err
+	}
+
 	pgCfg, err := NewPGConfig()
 	if err != nil {
 		return nil, err
@@ -34,6 +40,7 @@ func Parse(path string) (*Config, error) {
 
 	return &Config{
 		GRPC: grpcCfg,
+		HTTP: httpCfg,
 		PG:   pgCfg,
 	}, nil
 }

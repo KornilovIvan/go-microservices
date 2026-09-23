@@ -2,6 +2,7 @@
 .DS_Store
 bin/
 vendor/
+vendor.protogen/
 *.exe
 /grpc_server
 /grpc_client
