@@ -14,6 +14,7 @@ import (
 	"google.golang.org/grpc/reflection"
 
 	"github.com/ivankornilov/auth/internal/config"
+	"github.com/ivankornilov/auth/internal/interceptor"
 	desc "github.com/ivankornilov/auth/pkg/auth_v1"
 )
 
@@ -105,7 +106,9 @@ func (a *App) initServiceProvider(_ context.Context) error {
 }
 
 func (a *App) initGRPCServer(ctx context.Context) error {
-	a.grpcServer = grpc.NewServer()
+	a.grpcServer = grpc.NewServer(
+		grpc.UnaryInterceptor(interceptor.ValidateInterceptor),
+	)
 	reflection.Register(a.grpcServer)
 	desc.RegisterAuthV1Server(a.grpcServer, a.serviceProvider.UserImpl(ctx))
 

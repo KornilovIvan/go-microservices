@@ -5,6 +5,7 @@ go 1.26.6
 require (
 	github.com/KornilovIvan/platform_common v1.0.0
 	github.com/Masterminds/squirrel v1.5.4
+	github.com/envoyproxy/protoc-gen-validate v1.3.3
 	github.com/fatih/color v1.19.0
 	github.com/gojuno/minimock/v3 v3.4.7
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.27.3

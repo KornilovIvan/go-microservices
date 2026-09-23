@@ -10,6 +10,7 @@ install-deps:
 	GOBIN="$(LOCAL_BIN)" go install -mod=mod google.golang.org/grpc/cmd/protoc-gen-go-grpc@v1.2
 	GOBIN="$(LOCAL_BIN)" go install github.com/pressly/goose/v3/cmd/goose@v3.14.0
 	GOBIN="$(LOCAL_BIN)" go install github.com/grpc-ecosystem/grpc-gateway/v2/protoc-gen-grpc-gateway@v2.27.3
+	GOBIN="$(LOCAL_BIN)" go install github.com/envoyproxy/protoc-gen-validate@v0.10.1
 
 get-deps:
 	go get -u google.golang.org/protobuf/cmd/protoc-gen-go
@@ -28,6 +29,8 @@ generate-auth-api:
 	--plugin=protoc-gen-go-grpc="$(LOCAL_BIN)/protoc-gen-go-grpc" \
 	--grpc-gateway_out=pkg/auth_v1 --grpc-gateway_opt=paths=source_relative \
 	--plugin=protoc-gen-grpc-gateway="$(LOCAL_BIN)/protoc-gen-grpc-gateway" \
+	--validate_out=lang=go:pkg/auth_v1 --validate_opt=paths=source_relative \
+	--plugin=protoc-gen-validate="$(LOCAL_BIN)/protoc-gen-validate" \
 	api/auth_v1/auth.proto
 
 vendor-proto:
@@ -36,6 +39,12 @@ vendor-proto:
 		mkdir -p vendor.protogen/google && \
 		mv vendor.protogen/googleapis/google/api vendor.protogen/google && \
 		rm -rf vendor.protogen/googleapis ; \
+	fi
+	@if [ ! -d vendor.protogen/validate ]; then \
+		git clone --depth 1 --branch v0.10.1 https://github.com/envoyproxy/protoc-gen-validate vendor.protogen/protoc-gen-validate && \
+		mkdir -p vendor.protogen/validate && \
+		mv vendor.protogen/protoc-gen-validate/validate/*.proto vendor.protogen/validate && \
+		rm -rf vendor.protogen/protoc-gen-validate ; \
 	fi
 
 local-up:
