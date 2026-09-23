@@ -27,7 +27,7 @@ func TestAPISuite(t *testing.T) {
 func (s *APISuite) setup() {
 	s.ctx = context.Background()
 	s.userService = mocks.NewUserServiceMock(s.T())
-	s.api = user.NewImplementation(s.userService)
+	s.api = user.NewImplementation(s.userService, nil)
 }
 
 func (s *APISuite) requireStatus(err error, code codes.Code, message string) {

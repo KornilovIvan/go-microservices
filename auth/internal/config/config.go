@@ -7,6 +7,7 @@ type Config struct {
 	HTTP    HTTPConfig
 	PG      PGConfig
 	Swagger SwaggerConfig
+	Token   TokenConfig
 }
 
 func Load(path string) error {
@@ -44,10 +45,16 @@ func Parse(path string) (*Config, error) {
 		return nil, err
 	}
 
+	tokenCfg, err := NewTokenConfig()
+	if err != nil {
+		return nil, err
+	}
+
 	return &Config{
 		GRPC:    grpcCfg,
 		HTTP:    httpCfg,
 		PG:      pgCfg,
 		Swagger: swaggerCfg,
+		Token:   tokenCfg,
 	}, nil
 }

@@ -98,6 +98,42 @@ func (r *repo) Get(ctx context.Context, id int64) (*model.User, error) {
 	return user, nil
 }
 
+func (r *repo) GetByName(ctx context.Context, name string) (*model.User, error) {
+	query, args, err := sq.Select(idColumn, nameColumn, emailColumn, passwordColumn, roleColumn, createdAtColumn, updatedAtColumn).
+		From(tableName).
+		PlaceholderFormat(sq.Dollar).
+		Where(sq.Eq{nameColumn: name}).
+		Limit(1).
+		ToSql()
+	if err != nil {
+		return nil, err
+	}
+
+	q := db.Query{
+		Name:     "user_repository.GetByName",
+		QueryRaw: query,
+	}
+
+	user := &model.User{}
+	err = r.db.DB().QueryRowContext(ctx, q, args...).Scan(
+		&user.ID,
+		&user.Info.Name,
+		&user.Info.Email,
+		&user.Info.Password,
+		&user.Info.Role,
+		&user.CreatedAt,
+		&user.UpdatedAt,
+	)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, model.ErrUserNotFound
+		}
+		return nil, err
+	}
+
+	return user, nil
+}
+
 func (r *repo) Update(ctx context.Context, user *model.UpdateUser) error {
 	builder := sq.Update(tableName).
 		PlaceholderFormat(sq.Dollar).

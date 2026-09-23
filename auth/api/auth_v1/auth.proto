@@ -49,6 +49,27 @@ service AuthV1 {
       delete: "/auth/v1"
     };
   }
+
+  rpc Login(LoginRequest) returns (LoginResponse) {
+    option (google.api.http) = {
+      post: "/auth/v1/login"
+      body: "*"
+    };
+  }
+
+  rpc GetRefreshToken(GetRefreshTokenRequest) returns (GetRefreshTokenResponse) {
+    option (google.api.http) = {
+      post: "/auth/v1/refresh"
+      body: "*"
+    };
+  }
+
+  rpc GetAccessToken(GetAccessTokenRequest) returns (GetAccessTokenResponse) {
+    option (google.api.http) = {
+      post: "/auth/v1/access"
+      body: "*"
+    };
+  }
 }
 
 enum Role {
@@ -89,4 +110,29 @@ message UpdateRequest {
 
 message DeleteRequest {
   int64 id = 1 [(validate.rules).int64.gt = 0];
+}
+
+message LoginRequest {
+  string username = 1 [(validate.rules).string.min_len = 1];
+  string password = 2 [(validate.rules).string.min_len = 1];
+}
+
+message LoginResponse {
+  string refresh_token = 1;
+}
+
+message GetRefreshTokenRequest {
+  string refresh_token = 1 [(validate.rules).string.min_len = 1];
+}
+
+message GetRefreshTokenResponse {
+  string refresh_token = 1;
+}
+
+message GetAccessTokenRequest {
+  string refresh_token = 1 [(validate.rules).string.min_len = 1];
+}
+
+message GetAccessTokenResponse {
+  string access_token = 1;
 }

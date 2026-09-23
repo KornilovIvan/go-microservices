@@ -17,6 +17,7 @@ import (
 
 	"github.com/ivankornilov/auth/internal/config"
 	"github.com/ivankornilov/auth/internal/interceptor"
+	accessDesc "github.com/ivankornilov/auth/pkg/access_v1"
 	desc "github.com/ivankornilov/auth/pkg/auth_v1"
 	_ "github.com/ivankornilov/auth/statik"
 )
@@ -125,6 +126,7 @@ func (a *App) initGRPCServer(ctx context.Context) error {
 	)
 	reflection.Register(a.grpcServer)
 	desc.RegisterAuthV1Server(a.grpcServer, a.serviceProvider.UserImpl(ctx))
+	accessDesc.RegisterAccessV1Server(a.grpcServer, a.serviceProvider.AccessImpl(ctx))
 
 	return nil
 }

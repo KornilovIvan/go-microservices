@@ -7,12 +7,15 @@ import (
 	"github.com/KornilovIvan/platform_common/pkg/db"
 	"github.com/KornilovIvan/platform_common/pkg/db/pg"
 	"github.com/KornilovIvan/platform_common/pkg/db/transaction"
+	accessAPI "github.com/ivankornilov/auth/internal/api/access"
 	userAPI "github.com/ivankornilov/auth/internal/api/user"
 	"github.com/ivankornilov/auth/internal/config"
 	"github.com/ivankornilov/auth/internal/repository"
 	logRepository "github.com/ivankornilov/auth/internal/repository/log"
 	userRepository "github.com/ivankornilov/auth/internal/repository/user"
 	"github.com/ivankornilov/auth/internal/service"
+	accessService "github.com/ivankornilov/auth/internal/service/access"
+	authService "github.com/ivankornilov/auth/internal/service/auth"
 	userService "github.com/ivankornilov/auth/internal/service/user"
 )
 
@@ -24,7 +27,10 @@ type serviceProvider struct {
 	userRepository repository.UserRepository
 	logRepository  repository.LogRepository
 	userService    service.UserService
+	authService    service.AuthService
+	accessService  service.AccessService
 	userImpl       *userAPI.Implementation
+	accessImpl     *accessAPI.Implementation
 }
 
 func newServiceProvider() *serviceProvider {
@@ -89,12 +95,36 @@ func (s *serviceProvider) UserService(ctx context.Context) service.UserService {
 	return s.userService
 }
 
+func (s *serviceProvider) AuthService(ctx context.Context) service.AuthService {
+	if s.authService == nil {
+		s.authService = authService.NewService(s.UserRepository(ctx), s.Config().Token)
+	}
+
+	return s.authService
+}
+
+func (s *serviceProvider) AccessService(_ context.Context) service.AccessService {
+	if s.accessService == nil {
+		s.accessService = accessService.NewService(s.Config().Token)
+	}
+
+	return s.accessService
+}
+
 func (s *serviceProvider) UserImpl(ctx context.Context) *userAPI.Implementation {
 	if s.userImpl == nil {
-		s.userImpl = userAPI.NewImplementation(s.UserService(ctx))
+		s.userImpl = userAPI.NewImplementation(s.UserService(ctx), s.AuthService(ctx))
 	}
 
 	return s.userImpl
+}
+
+func (s *serviceProvider) AccessImpl(ctx context.Context) *accessAPI.Implementation {
+	if s.accessImpl == nil {
+		s.accessImpl = accessAPI.NewImplementation(s.AccessService(ctx))
+	}
+
+	return s.accessImpl
 }
 
 func (s *serviceProvider) Close() {

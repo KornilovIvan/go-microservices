@@ -22,6 +22,7 @@ generate:
 	make vendor-proto
 	mkdir -p pkg/swagger
 	make generate-auth-api
+	make generate-access-api
 	"$(LOCAL_BIN)/statik" -src=pkg/swagger/ -include='*.css,*.html,*.js,*.json,*.png'
 
 generate-auth-api:
@@ -38,6 +39,15 @@ generate-auth-api:
 	--openapiv2_out=allow_merge=true,merge_file_name=api:pkg/swagger \
 	--plugin=protoc-gen-openapiv2="$(LOCAL_BIN)/protoc-gen-openapiv2" \
 	api/auth_v1/auth.proto
+
+generate-access-api:
+	mkdir -p pkg/access_v1
+	protoc --proto_path api/access_v1 --proto_path vendor.protogen \
+	--go_out=pkg/access_v1 --go_opt=paths=source_relative \
+	--plugin=protoc-gen-go="$(LOCAL_BIN)/protoc-gen-go" \
+	--go-grpc_out=pkg/access_v1 --go-grpc_opt=paths=source_relative \
+	--plugin=protoc-gen-go-grpc="$(LOCAL_BIN)/protoc-gen-go-grpc" \
+	api/access_v1/access.proto
 
 vendor-proto:
 	@if [ ! -d vendor.protogen/google ]; then \
