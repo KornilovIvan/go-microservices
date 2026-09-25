@@ -7,6 +7,7 @@ import (
 
 	"github.com/ivankornilov/auth/internal/app"
 	"github.com/ivankornilov/auth/internal/logger"
+	"github.com/ivankornilov/auth/internal/metric"
 )
 
 var (
@@ -29,6 +30,11 @@ func main() {
 	logger.Init(core)
 
 	ctx := context.Background()
+
+	err = metric.Init(ctx)
+	if err != nil {
+		log.Fatalf("failed to init metrics: %v", err)
+	}
 
 	a, err := app.NewApp(ctx, configPath)
 	if err != nil {

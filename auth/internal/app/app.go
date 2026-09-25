@@ -10,6 +10,7 @@ import (
 
 	grpcMiddleware "github.com/grpc-ecosystem/go-grpc-middleware"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/rakyll/statik/fs"
 	"github.com/rs/cors"
 	"google.golang.org/grpc"
@@ -28,6 +29,7 @@ type App struct {
 	grpcServer      *grpc.Server
 	httpServer      *http.Server
 	swaggerServer   *http.Server
+	metricsServer   *http.Server
 	configPath      string
 }
 
@@ -46,7 +48,7 @@ func (a *App) Run() error {
 	defer a.serviceProvider.Close()
 
 	var wg sync.WaitGroup
-	wg.Add(3)
+	wg.Add(4)
 
 	go func() {
 		defer wg.Done()
@@ -75,6 +77,15 @@ func (a *App) Run() error {
 		}
 	}()
 
+	go func() {
+		defer wg.Done()
+
+		err := a.runMetricsServer()
+		if err != nil {
+			log.Fatalf("failed to run metrics server: %v", err)
+		}
+	}()
+
 	wg.Wait()
 
 	return nil
@@ -87,6 +98,7 @@ func (a *App) initDeps(ctx context.Context) error {
 		a.initGRPCServer,
 		a.initHTTPServer,
 		a.initSwaggerServer,
+		a.initMetricsServer,
 	}
 
 	for _, f := range inits {
@@ -126,6 +138,7 @@ func (a *App) initGRPCServer(ctx context.Context) error {
 		grpc.UnaryInterceptor(
 			grpcMiddleware.ChainUnaryServer(
 				interceptor.LogInterceptor,
+				interceptor.MetricsInterceptor,
 				interceptor.ValidateInterceptor,
 			),
 		),
@@ -206,6 +219,25 @@ func (a *App) runSwaggerServer() error {
 	log.Printf("Swagger server listening at %s", address)
 
 	return a.swaggerServer.ListenAndServe()
+}
+
+func (a *App) initMetricsServer(_ context.Context) error {
+	mux := http.NewServeMux()
+	mux.Handle("/metrics", promhttp.Handler())
+
+	a.metricsServer = &http.Server{
+		Addr:    a.serviceProvider.Config().Metrics.Address(),
+		Handler: mux,
+	}
+
+	return nil
+}
+
+func (a *App) runMetricsServer() error {
+	address := a.serviceProvider.Config().Metrics.Address()
+	log.Printf("metrics server listening at %s", address)
+
+	return a.metricsServer.ListenAndServe()
 }
 
 func serveSwaggerFile(path string) http.HandlerFunc {
