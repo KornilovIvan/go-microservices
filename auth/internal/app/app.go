@@ -10,6 +10,8 @@ import (
 
 	grpcMiddleware "github.com/grpc-ecosystem/go-grpc-middleware"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
+	"github.com/grpc-ecosystem/grpc-opentracing/go/otgrpc"
+	"github.com/opentracing/opentracing-go"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/rakyll/statik/fs"
 	"github.com/rs/cors"
@@ -19,6 +21,7 @@ import (
 
 	"github.com/ivankornilov/auth/internal/config"
 	"github.com/ivankornilov/auth/internal/interceptor"
+	"github.com/ivankornilov/auth/internal/tracing"
 	accessDesc "github.com/ivankornilov/auth/pkg/access_v1"
 	desc "github.com/ivankornilov/auth/pkg/auth_v1"
 	_ "github.com/ivankornilov/auth/statik"
@@ -94,6 +97,7 @@ func (a *App) Run() error {
 func (a *App) initDeps(ctx context.Context) error {
 	inits := []func(context.Context) error{
 		a.initConfig,
+		a.initTracing,
 		a.initServiceProvider,
 		a.initGRPCServer,
 		a.initHTTPServer,
@@ -125,6 +129,12 @@ func (a *App) initConfig(_ context.Context) error {
 	return nil
 }
 
+func (a *App) initTracing(_ context.Context) error {
+	tracing.Init()
+
+	return nil
+}
+
 func (a *App) initServiceProvider(_ context.Context) error {
 	if a.serviceProvider == nil {
 		a.serviceProvider = newServiceProvider()
@@ -137,6 +147,7 @@ func (a *App) initGRPCServer(ctx context.Context) error {
 	a.grpcServer = grpc.NewServer(
 		grpc.UnaryInterceptor(
 			grpcMiddleware.ChainUnaryServer(
+				interceptor.ServerTracingInterceptor,
 				interceptor.LogInterceptor,
 				interceptor.MetricsInterceptor,
 				interceptor.ValidateInterceptor,
@@ -155,6 +166,7 @@ func (a *App) initHTTPServer(ctx context.Context) error {
 
 	opts := []grpc.DialOption{
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
+		grpc.WithUnaryInterceptor(otgrpc.OpenTracingClientInterceptor(opentracing.GlobalTracer())),
 	}
 
 	err := desc.RegisterAuthV1HandlerFromEndpoint(ctx, mux, a.serviceProvider.Config().GRPC.Address(), opts)
