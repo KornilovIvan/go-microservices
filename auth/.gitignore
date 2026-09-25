@@ -10,3 +10,4 @@ vendor.protogen/
 !local.env
 !prod.env
 /coverage.out
+/logs/
