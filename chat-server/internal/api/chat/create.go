@@ -15,5 +15,9 @@ func (i *Implementation) Create(ctx context.Context, req *desc.CreateRequest) (*
 
 	log.Printf("created chat id=%d usernames=%v", id, req.GetUsernames())
 
+	i.mxChannel.Lock()
+	i.channels[id] = make(chan *desc.Message, 100)
+	i.mxChannel.Unlock()
+
 	return &desc.CreateResponse{Id: id}, nil
 }

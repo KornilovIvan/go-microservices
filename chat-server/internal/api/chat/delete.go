@@ -21,5 +21,16 @@ func (i *Implementation) Delete(ctx context.Context, req *desc.DeleteRequest) (*
 		return nil, mapError(err)
 	}
 
+	i.mxChannel.Lock()
+	if ch, ok := i.channels[req.GetId()]; ok {
+		close(ch)
+		delete(i.channels, req.GetId())
+	}
+	i.mxChannel.Unlock()
+
+	i.mxChat.Lock()
+	delete(i.chats, req.GetId())
+	i.mxChat.Unlock()
+
 	return &emptypb.Empty{}, nil
 }
